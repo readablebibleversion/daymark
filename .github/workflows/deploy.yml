@@ -24,10 +24,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit
       - run: npm run build
         env:
-          BASE_URL: /${{ github.event.repository.name }}
+          BASE_URL: /${{ github.event.repository.name }}/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

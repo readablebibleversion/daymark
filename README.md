@@ -1,92 +1,74 @@
 # Daymark
 
-A simple goal and habit tracker that installs on your phone as a **PWA (progressive web app)** and works offline. It's built with Expo + React Native for Web + TypeScript, so the same code can also ship as a native iOS/Android app later.
+A simple daily goal and habit tracker. It's a fast, mobile-first website that you can also install on your phone as an app (PWA) and use offline.
+
+**Live:** https://readablebibleversion.github.io/daymark/
 
 ## Features
 
-- **Today view (opens first).** A big score card with a face that's happy when the day is positive and sad when it's negative. Below it, your goals as large rows: tap the circle to finish a once-a-day goal, or use **− / +** for repeats (water ×6) and for habits you're avoiding. Step through days with the **‹ ›** arrows.
-- **Goals and habits.** Positive goals add points. Habits you want to drop subtract points.
-- **Weekly grid (Week tab).** Tap a date in the grid header to open that day in the Today view. Each goal gets a row and each day gets a column (Mon–Sun). Tap a square to check it off. Goals set to repeat (for example, water ×6 a day) count up with each tap and wrap back to zero. Long-press a square to clear it. Future days are locked.
-- **Day goals.** Add one-off goals for any day ("Call mum", "Tidy desk"). Finishing one gives a 😊 happy face and **+1 point**. Tap a date in the grid header to plan or review that day.
-- **Weight.** Log your weight for any day in kg or lb. You see the change since your last entry, and the Progress tab shows a trend line with your latest, change and lowest values.
-- **Scores.** You get a daily score row, a week score and today's score, each shown against the best you could have scored.
-- **Progress.** A daily score chart, an 8-week trend, a weight trend, and a streak for each goal (days you hit the target, or days a habit stayed clean).
-- **Manage.** You can add, edit, reorder, archive, restore and delete goals, and move between weeks.
-- **Light and dark mode.** It follows the system setting, or you can set it yourself.
-- **Local only.** Data stays in the browser's local storage on your device. There is no account and no server.
+- **Today (opens first).** A score card with a face that's happy when the day is positive and sad when it's negative. Your daily goals are big rows: tap the circle to finish a once-a-day goal, or use **− / +** for repeats (water ×6) and for habits you're avoiding. Step through days with **‹ ›**.
+- **Day goals.** One-off goals for a single day. Each one you finish gives a happy face and **+1**.
+- **Weight.** Log your weight in kg or lb. You see the change since your last entry and a trend chart.
+- **Week.** The classic grid with one row per goal and one column per day. Tap a square to check it off (tap again for repeats), and press and hold to clear it. Tap a date to open that day.
+- **Progress.** Daily and 8-week score charts, a weight trend, and streaks for each goal (days you hit the target, or days a habit stayed clean).
+- **Goals.** Add, edit, reorder, archive, restore and delete goals. Settings for theme (system/light/dark) and weight unit are here too.
+- **Layout.** Normal page scrolling, a sticky header, a bottom tab bar on phones, and a two-column layout on desktop.
+- **Local only.** Data lives in your browser's localStorage on that device. There is no account and no server.
 
 ## Run it
 
-You need Node 20 or newer.
+You need Node 20.19 or newer.
 
 ```powershell
 npm install
-npm run web
+npm run dev
 ```
 
-`npm run web` opens a dev server at http://localhost:8081 with live reload. There is no offline support in dev mode.
-
-## Build and try the installable PWA
+Then open http://localhost:5173. The dev server has live reload but no offline support.
 
 ```powershell
 npm run build
 npm run preview
 ```
 
-`npm run build` exports the static site to `dist/` and generates `dist/sw.js`, the service worker that precaches the app so it works offline. `npm run preview` serves `dist/` at http://localhost:4173. Open it in Chrome or Edge and use the install icon in the address bar.
+`npm run build` type-checks the code, builds into `dist/`, and generates `dist/sw.js`, the service worker that precaches the site for offline use. `npm run preview` serves the build locally.
 
-### Live site
+## Deploying
 
-**https://readablebibleversion.github.io/daymark/**
+The `.github/workflows/deploy.yml` workflow builds and publishes to GitHub Pages on every push to `main`. It sets `BASE_URL=/<repo-name>/` because a Pages project site lives in a subfolder. For a site at a domain root, build without `BASE_URL`. Other static hosts (Netlify, Vercel, Cloudflare Pages) work too: use build command `npm run build` and output folder `dist`.
 
-The site is deployed by GitHub Actions (`.github/workflows/deploy.yml`) on every push to `main`. The workflow builds with `BASE_URL=/daymark`, because a GitHub Pages project site lives in a subfolder. To host at a domain root, build without `BASE_URL`. Other static hosts (Netlify, Vercel, Cloudflare Pages) also work: use build command `npm run build` and output folder `dist`.
+## Install on your phone
 
-> On Windows Git Bash, set `MSYS_NO_PATHCONV=1` when you pass `BASE_URL` locally, or Git Bash rewrites `/daymark` into a Windows path.
+- **iPhone (Safari):** open the site, tap Share, then **Add to Home Screen**.
+- **Android (Chrome):** open the site, tap ⋮, then **Install app**.
 
-### Put it on your phone
+After the first visit it works with no connection. New versions load the next time you open it online.
 
-Open the live site on your phone:
-
-- **iPhone (Safari):** tap Share, then **Add to Home Screen**.
-- **Android (Chrome):** tap ⋮, then **Install app** (or **Add to Home screen**).
-
-After the first visit it opens and works with no connection. When you deploy a new build, the app picks it up the next time it's opened online.
-
-> Your data lives on the phone you use. It doesn't sync between devices, and clearing the browser's site data for the app erases it.
+> Data stays on the device you use. It doesn't sync, and clearing the site's data in the browser erases it.
 
 ## How scoring works
 
 | | Each one |
 |---|---|
-| Goal check | `+points` (up to *times per day* checks per day) |
+| Goal check | `+points` (up to *times per day*) |
 | Habit check | `−points` each time it happens |
 | Day goal finished | `+1` and a happy face |
 
-Day score = the sum of everything above. Week score = the sum of the 7 days. Archived goals keep their history, so they still count in past scores.
+Day score = the sum. Week score = the 7 days added up. Archived goals keep their history, so they still count in past scores.
 
 ## Project layout
 
 ```
-App.tsx                   shell: header, tab bar, theme
-src/store.tsx             state, actions, persistence (AsyncStorage → localStorage on web)
+index.html                PWA head tags; applies the theme before first paint
+src/main.tsx              entry + service worker registration
+src/App.tsx               header, tabs, theme
+src/views/                Today, Week, Progress, Goals
+src/GoalEditor.tsx        add/edit sheet (<dialog>)
+src/store.tsx             state, actions, localStorage persistence
 src/scoring.ts            scores, streaks, weight units
-src/DayPanel.tsx          day goals (happy face +1) and weight entry
-src/screens/              Week, Progress, Goals
-src/ui.tsx                Card, Button, Stepper, BarChart, LineChart…
-public/index.html         PWA head tags + service worker registration
-public/manifest.webmanifest
-public/icons/             app icons (generated by `npm run icons`)
-scripts/build-sw.mjs      writes dist/sw.js after export
-scripts/serve.mjs         tiny static server for dist/
-scripts/make-icons.mjs    draws the Daymark icons
+src/date.ts               date helpers (weeks start Monday)
+src/ui.tsx, icons.tsx     small UI pieces, SVG charts and icons
+src/styles.css            all styling (CSS variables for light/dark)
+public/                   manifest + icons (regenerate with `npm run icons`)
+scripts/build-sw.mjs      writes dist/sw.js after `vite build`
 ```
-
-`npm run typecheck` runs the TypeScript checks.
-
-## Native app (optional, later)
-
-The code still runs in Expo Go (`npx expo start`, then scan the QR code) and can be built with EAS (`npx eas-cli@latest build`). The web PWA is the main target for now.
-
-## Ideas for later
-
-Reminders and notifications, sync across devices, CSV/JSON export, drag-to-reorder, and a weight goal line.

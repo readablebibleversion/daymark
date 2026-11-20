@@ -1,5 +1,5 @@
 // Draws the Daymark icon (a tilted marigold tile with a dark check) as PNGs.
-// Run with: node scripts/make-icons.mjs  (output goes to public/icons and assets/)
+// Run with: npm run icons  (output goes to public/icons)
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -71,10 +71,7 @@ const out = {
   // Maskable: full-bleed background, tile inside the 80% safe zone.
   'public/icons/maskable-512.png': draw(512, 0.2, PAPER),
   'public/icons/apple-touch-icon.png': draw(180, 0.12, PAPER),
-  'assets/favicon.png': draw(48, 0.04, null),
-  // Native app icons too, so Expo builds share the branding.
-  'assets/icon.png': draw(1024, 0.12, PAPER),
-  'assets/splash-icon.png': draw(512, 0.06, null),
+  'public/icons/favicon-48.png': draw(48, 0.04, null),
 };
 for (const [file, buf] of Object.entries(out)) {
   writeFileSync(file, buf);

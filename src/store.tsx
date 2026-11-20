@@ -1,5 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useReducer, useState } from 'react';
+import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import { toKey, today } from './date';
 import { AppState, Goal, ThemePref, WeightUnit } from './types';
 
@@ -138,30 +137,33 @@ function reducer(state: AppState, a: Action): AppState {
 
 const StoreContext = createContext<{ state: AppState; dispatch: React.Dispatch<Action> } | null>(null);
 
+function load(): AppState {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw) as AppState;
+      if (saved?.version === 1 && Array.isArray(saved.goals)) {
+        // Fill fields added after the first release.
+        return { ...saved, tasks: saved.tasks ?? {}, weights: saved.weights ?? {}, unit: saved.unit ?? 'kg' };
+      }
+    }
+  } catch {
+    // Storage blocked or corrupt: start fresh.
+  }
+  return starterState();
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, undefined, starterState);
-  const [ready, setReady] = useState(false);
+  const [state, dispatch] = useReducer(reducer, undefined, load);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((raw) => {
-        if (raw) {
-          const saved = JSON.parse(raw) as AppState;
-          if (saved?.version === 1 && Array.isArray(saved.goals)) {
-            // Fill fields added after the first release.
-            dispatch({ type: 'hydrate', state: { ...saved, tasks: saved.tasks ?? {}, weights: saved.weights ?? {}, unit: saved.unit ?? 'kg' } });
-          }
-        }
-      })
-      .catch(() => {})
-      .finally(() => setReady(true));
-  }, []);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // Storage full or blocked; keep working in memory.
+    }
+  }, [state]);
 
-  useEffect(() => {
-    if (ready) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch(() => {});
-  }, [state, ready]);
-
-  if (!ready) return null;
   return <StoreContext.Provider value={{ state, dispatch }}>{children}</StoreContext.Provider>;
 }
 
