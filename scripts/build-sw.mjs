@@ -51,7 +51,8 @@ self.addEventListener('fetch', (event) => {
   // Pages: try the network first so updates arrive, fall back to the cached app shell offline.
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req)
+      // Revalidate with the server so a new deploy shows up on the next open (Pages caches HTML ~10 min).
+      fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
         .then((res) => {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put('./', copy));
