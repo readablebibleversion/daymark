@@ -16,6 +16,7 @@ type Action =
   | { type: 'delete'; id: string }
   | { type: 'tap'; date: string; id: string }
   | { type: 'clear'; date: string; id: string }
+  | { type: 'setCount'; date: string; id: string; n: number }
   | { type: 'theme'; theme: ThemePref }
   | { type: 'addTask'; date: string; text: string }
   | { type: 'toggleTask'; date: string; id: string }
@@ -101,6 +102,11 @@ function reducer(state: AppState, a: Action): AppState {
     }
     case 'clear':
       return setCount(state, a.date, a.id, 0);
+    case 'setCount': {
+      const goal = state.goals.find((g) => g.id === a.id);
+      if (!goal) return state;
+      return setCount(state, a.date, a.id, Math.max(0, Math.min(goal.perDay, a.n)));
+    }
     case 'theme':
       return { ...state, theme: a.theme };
     case 'addTask': {

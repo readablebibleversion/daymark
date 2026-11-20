@@ -3,18 +3,20 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Pressable, Text, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { startOfWeek, today } from './src/date';
+import { addDays, startOfWeek, today } from './src/date';
 import { GoalEditor } from './src/GoalEditor';
 import { GoalsScreen } from './src/screens/GoalsScreen';
 import { ProgressScreen } from './src/screens/ProgressScreen';
+import { DayScreen } from './src/screens/DayScreen';
 import { WeekScreen } from './src/screens/WeekScreen';
 import { StoreProvider, useStore } from './src/store';
 import { palette, ThemeContext } from './src/theme';
 import { Goal } from './src/types';
 import { IconButton, IconName, Logo } from './src/ui';
 
-type Tab = 'week' | 'progress' | 'goals';
+type Tab = 'day' | 'week' | 'progress' | 'goals';
 const TABS: { key: Tab; label: string; icon: IconName; iconOn: IconName }[] = [
+  { key: 'day', label: 'Today', icon: 'today-outline', iconOn: 'today' },
   { key: 'week', label: 'Week', icon: 'grid-outline', iconOn: 'grid' },
   { key: 'progress', label: 'Progress', icon: 'stats-chart-outline', iconOn: 'stats-chart' },
   { key: 'goals', label: 'Goals', icon: 'list-outline', iconOn: 'list' },
@@ -25,8 +27,11 @@ function Shell() {
   const system = useColorScheme();
   const mode = state.theme === 'system' ? (system === 'dark' ? 'dark' : 'light') : state.theme;
   const t = palette[mode];
-  const [tab, setTab] = useState<Tab>('week');
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(today()));
+  const [tab, setTab] = useState<Tab>('day');
+  // One selected day drives every tab; the week views show the week it falls in.
+  const [day, setDay] = useState(today);
+  const weekStart = startOfWeek(day);
+  const setWeekStart = (ws: Date) => setDay(addDays(ws, (day.getDay() + 6) % 7));
   // undefined = editor closed, null = new goal
   const [editing, setEditing] = useState<Goal | null | undefined>(undefined);
 
@@ -45,7 +50,18 @@ function Shell() {
             />
           </View>
           <View style={{ flex: 1 }}>
-            {tab === 'week' && <WeekScreen weekStart={weekStart} setWeekStart={setWeekStart} onEdit={setEditing} />}
+            {tab === 'day' && <DayScreen day={day} setDay={setDay} onEdit={setEditing} />}
+            {tab === 'week' && (
+              <WeekScreen
+                weekStart={weekStart}
+                setWeekStart={setWeekStart}
+                onEdit={setEditing}
+                onPickDay={(d) => {
+                  setDay(d);
+                  setTab('day');
+                }}
+              />
+            )}
             {tab === 'progress' && <ProgressScreen weekStart={weekStart} />}
             {tab === 'goals' && <GoalsScreen onEdit={setEditing} />}
           </View>

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { addDays, DAY_LETTERS, formatWeek, startOfWeek, toKey, today, weekDays } from '../date';
 import { countOf, dayScore, maxDayScore, signed } from '../scoring';
@@ -7,17 +7,18 @@ import { useStore } from '../store';
 import { useTheme, withAlpha } from '../theme';
 import { Goal } from '../types';
 import { Button, Card, IconButton } from '../ui';
-import { DayGoals, WeightCard } from '../DayPanel';
 
 interface Props {
   weekStart: Date;
   setWeekStart: (d: Date) => void;
   onEdit: (g: Goal | null) => void;
+  /** Open a day in the Today view. */
+  onPickDay: (d: Date) => void;
 }
 
 const NAME_COL = '34%';
 
-export function WeekScreen({ weekStart, setWeekStart, onEdit }: Props) {
+export function WeekScreen({ weekStart, setWeekStart, onEdit, onPickDay }: Props) {
   const { t } = useTheme();
   const { state, dispatch } = useStore();
   const now = today();
@@ -30,10 +31,6 @@ export function WeekScreen({ weekStart, setWeekStart, onEdit }: Props) {
   const best = maxDayScore(state.goals);
   const todayScore = dayScore(state, todayKey);
 
-  // Day selected for day goals and weight: today when it is in view, else the week's Monday.
-  const pickDefault = () => (isCurrent ? todayKey : toKey(weekStart));
-  const [selected, setSelected] = useState(pickDefault);
-  useEffect(() => setSelected(pickDefault()), [toKey(weekStart)]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
@@ -74,21 +71,19 @@ export function WeekScreen({ weekStart, setWeekStart, onEdit }: Props) {
           {days.map((d, i) => {
             const key = toKey(d);
             const isToday = key === todayKey;
-            const isSel = key === selected;
             return (
               <Pressable
                 key={i}
-                onPress={() => setSelected(key)}
+                onPress={() => onPickDay(d)}
                 accessibilityRole="button"
-                accessibilityState={{ selected: isSel }}
-                accessibilityLabel={`Show day goals and weight for ${d.toDateString()}`}
+                accessibilityLabel={`Open ${d.toDateString()}`}
                 style={{ flex: 1, alignItems: 'center' }}
               >
                 <Text style={{ color: isToday ? t.accent : t.muted, fontSize: 11, fontWeight: '700' }}>{DAY_LETTERS[i]}</Text>
                 <View
                   style={{
                     width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
-                    backgroundColor: isToday ? t.accent : 'transparent', borderWidth: 2, borderColor: isSel ? t.text : 'transparent',
+                    backgroundColor: isToday ? t.accent : 'transparent', 
                   }}
                 >
                   <Text style={{ color: isToday ? t.onAccent : t.text, fontSize: 12, fontWeight: '700' }}>{d.getDate()}</Text>
@@ -154,10 +149,8 @@ export function WeekScreen({ weekStart, setWeekStart, onEdit }: Props) {
       </Card>
 
       <Text style={{ color: t.muted, fontSize: 12, textAlign: 'center', marginBottom: 14 }}>
-        Tap a square to check it off (tap again for repeats). Long-press to clear. Tap a date to plan that day.
+        Tap a square to check it off (tap again for repeats). Long-press to clear. Tap a date to open that day.
       </Text>
-      <DayGoals date={selected} isFuture={selected > todayKey} />
-      <WeightCard date={selected} isFuture={selected > todayKey} />
       <Button title="Add goal or habit" icon="add" onPress={() => onEdit(null)} />
     </ScrollView>
   );

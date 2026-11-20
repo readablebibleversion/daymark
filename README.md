@@ -4,8 +4,9 @@ A simple goal and habit tracker that installs on your phone as a **PWA (progress
 
 ## Features
 
+- **Today view (opens first).** A big score card with a face that's happy when the day is positive and sad when it's negative. Below it, your goals as large rows: tap the circle to finish a once-a-day goal, or use **− / +** for repeats (water ×6) and for habits you're avoiding. Step through days with the **‹ ›** arrows.
 - **Goals and habits.** Positive goals add points. Habits you want to drop subtract points.
-- **Weekly grid.** Each goal gets a row and each day gets a column (Mon–Sun). Tap a square to check it off. Goals set to repeat (for example, water ×6 a day) count up with each tap and wrap back to zero. Long-press a square to clear it. Future days are locked.
+- **Weekly grid (Week tab).** Tap a date in the grid header to open that day in the Today view. Each goal gets a row and each day gets a column (Mon–Sun). Tap a square to check it off. Goals set to repeat (for example, water ×6 a day) count up with each tap and wrap back to zero. Long-press a square to clear it. Future days are locked.
 - **Day goals.** Add one-off goals for any day ("Call mum", "Tidy desk"). Finishing one gives a 😊 happy face and **+1 point**. Tap a date in the grid header to plan or review that day.
 - **Weight.** Log your weight for any day in kg or lb. You see the change since your last entry, and the Progress tab shows a trend line with your latest, change and lowest values.
 - **Scores.** You get a daily score row, a week score and today's score, each shown against the best you could have scored.
