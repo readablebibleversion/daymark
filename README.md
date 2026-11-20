@@ -34,14 +34,17 @@ npm run preview
 
 `npm run build` exports the static site to `dist/` and generates `dist/sw.js`, the service worker that precaches the app so it works offline. `npm run preview` serves `dist/` at http://localhost:4173. Open it in Chrome or Edge and use the install icon in the address bar.
 
+### Live site
+
+**https://readablebibleversion.github.io/daymark/**
+
+The site is deployed by GitHub Actions (`.github/workflows/deploy.yml`) on every push to `main`. The workflow builds with `BASE_URL=/daymark`, because a GitHub Pages project site lives in a subfolder. To host at a domain root, build without `BASE_URL`. Other static hosts (Netlify, Vercel, Cloudflare Pages) also work: use build command `npm run build` and output folder `dist`.
+
+> On Windows Git Bash, set `MSYS_NO_PATHCONV=1` when you pass `BASE_URL` locally, or Git Bash rewrites `/daymark` into a Windows path.
+
 ### Put it on your phone
 
-Phones only allow installing over **HTTPS**, so host the `dist/` folder on any static host. For example:
-
-- **Netlify Drop:** drag the `dist` folder onto https://app.netlify.com/drop
-- **Vercel / Cloudflare Pages / GitHub Pages:** use build command `npm run build` and output folder `dist`
-
-Then open the URL on your phone:
+Open the live site on your phone:
 
 - **iPhone (Safari):** tap Share, then **Add to Home Screen**.
 - **Android (Chrome):** tap ⋮, then **Install app** (or **Add to Home screen**).
