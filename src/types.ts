@@ -38,4 +38,6 @@ export interface AppState {
   /** body weight in kg: weights[dateKey] */
   weights: Record<string, number>;
   unit: WeightUnit;
+  /** True once the user picks a unit; until then it follows the device's region. */
+  unitSet?: boolean;
 }

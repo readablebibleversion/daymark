@@ -1,14 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { isUnlocked, lock } from './lock';
+import { LockScreen } from './LockScreen';
 import { StoreProvider } from './store';
 import './styles.css';
 
+/** Shows the lock screen until the password is entered; the app (and its data) only loads after. */
+function Gate() {
+  const [open, setOpen] = useState(isUnlocked);
+  if (!open) return <LockScreen onUnlock={() => setOpen(true)} />;
+  return (
+    <StoreProvider>
+      <App onLock={() => { lock(); setOpen(false); window.scrollTo({ top: 0 }); }} />
+    </StoreProvider>
+  );
+}
+
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <StoreProvider>
-      <App />
-    </StoreProvider>
+    <Gate />
   </React.StrictMode>,
 );
 

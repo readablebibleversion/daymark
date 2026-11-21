@@ -35,7 +35,7 @@ function useResolvedTheme() {
   return mode;
 }
 
-export function App() {
+export function App({ onLock }: { onLock: () => void }) {
   const { dispatch } = useStore();
   const mode = useResolvedTheme();
   const [tab, setTab] = useState<Tab>('day');
@@ -77,6 +77,9 @@ export function App() {
             Daymark
           </div>
           <div className="desktop-tabs">{tabs}</div>
+          <button className="icon-btn" aria-label="Lock" title="Lock" onClick={onLock}>
+            <Icon name="lock" />
+          </button>
           <button className="icon-btn" aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             onClick={() => dispatch({ type: 'theme', theme: mode === 'dark' ? 'light' : 'dark' })}>
             <Icon name={mode === 'dark' ? 'sun' : 'moon'} />

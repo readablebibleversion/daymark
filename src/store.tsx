@@ -4,6 +4,17 @@ import { AppState, Goal, ThemePref, WeightUnit } from './types';
 
 const STORAGE_KEY = 'daymark:v1';
 
+/** Pounds for the US (and the other places that use them), kilograms everywhere else. */
+export function localeUnit(): WeightUnit {
+  try {
+    const lang = navigator.languages?.[0] ?? navigator.language;
+    const region = new Intl.Locale(lang).maximize().region;
+    return region && ['US', 'LR', 'MM'].includes(region) ? 'lb' : 'kg';
+  } catch {
+    return 'kg';
+  }
+}
+
 export type NewGoal = Pick<Goal, 'name' | 'kind' | 'points' | 'perDay' | 'color'>;
 
 type Action =
@@ -36,7 +47,7 @@ function starterState(): AppState {
     checks: {},
     tasks: {},
     weights: {},
-    unit: 'kg',
+    unit: localeUnit(),
     goals: [
       g('Move for 30 min', 'good', 3, 1, '#2E9D6A'),
       g('Drink a glass of water', 'good', 1, 6, '#3B82C4'),
@@ -131,7 +142,7 @@ function reducer(state: AppState, a: Action): AppState {
       return { ...state, weights };
     }
     case 'unit':
-      return { ...state, unit: a.unit };
+      return { ...state, unit: a.unit, unitSet: true };
   }
 }
 
@@ -155,7 +166,7 @@ export function normalizeState(data: unknown): AppState | null {
     theme: s.theme ?? 'system',
     tasks: isObj(s.tasks) ? s.tasks : {},
     weights: isObj(s.weights) ? s.weights : {},
-    unit: s.unit === 'lb' ? 'lb' : 'kg',
+    unit: s.unitSet ? (s.unit === 'lb' ? 'lb' : 'kg') : localeUnit(),
   };
 }
 
