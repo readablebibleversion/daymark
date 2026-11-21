@@ -130,6 +130,16 @@ export function TodayView({ day, setDay, onEdit, onOpenBackup, onOpenWeight }: P
   );
 }
 
+const fmtNum = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+
+/** Suggest what to write, based on the goal's name. */
+function notePrompt(goal: Goal) {
+  if (goal.kind === 'bad') return 'What happened? What set it off?';
+  if (/hiit|workout|gym|lift|train|crossfit|circuit|yoga|run|swim|bike|cycle/i.test(goal.name))
+    return 'Describe the workout: exercises, rounds, times, how it felt…';
+  return 'Notes: how did it go?';
+}
+
 function GoalRow({ goal, date, locked, onEdit }: { goal: Goal; date: string; locked: boolean; onEdit: () => void }) {
   const { state, dispatch } = useStore();
   const count = countOf(state, date, goal.id);
@@ -139,7 +149,9 @@ function GoalRow({ goal, date, locked, onEdit }: { goal: Goal; date: string; loc
   const pts = count * goal.points;
   const set = (n: number) => dispatch({ type: 'setCount', date, id: goal.id, n });
   const note = state.goalNotes[date]?.[goal.id] ?? '';
-  const [editingNote, setEditingNote] = useState(false);
+  const amount = state.amounts[date]?.[goal.id];
+  const [open, setOpen] = useState(false);
+  const hasDetails = !!note || amount !== undefined;
 
   const detail = isBad
     ? count ? `Happened ${count}× · −${pts} pts` : `Clean so far · −${goal.points} pts each time`
@@ -148,7 +160,7 @@ function GoalRow({ goal, date, locked, onEdit }: { goal: Goal; date: string; loc
   const cls = ['goal-row', isBad ? 'bad' : '', !isBad && full ? 'done' : '', isBad && count ? 'slipped' : ''].join(' ');
   return (
     <div className={cls} style={cVar(goalColor(goal))}>
-      <button className="info" onClick={onEdit} aria-label={`${goal.name}. ${detail}. Edit`}>
+      <button className="info" onClick={onEdit} aria-label={`${goal.name}. ${detail}. Edit goal`}>
         <div className="name">{goal.name}</div>
         <div className="detail">{detail}</div>
         {!single && !isBad && (
@@ -156,11 +168,17 @@ function GoalRow({ goal, date, locked, onEdit }: { goal: Goal; date: string; loc
             {Array.from({ length: goal.perDay }, (_, i) => <span key={i} className={i < count ? 'on' : ''} />)}
           </div>
         )}
-        {note && !editingNote && <div className="goal-note">{note}</div>}
+        {goal.amountUnit && amount !== undefined && !open && (
+          <div className="goal-amount">
+            {fmtNum(amount)} {goal.amountTarget ? <span className="of">/ {fmtNum(goal.amountTarget)}</span> : null} {goal.amountUnit}
+          </div>
+        )}
+        {note && !open && <div className="goal-note">{note}</div>}
       </button>
 
-      <button className={`icon-btn note-btn${note ? ' has-note' : ''}`} aria-expanded={editingNote}
-        aria-label={note ? `Edit note for ${goal.name}` : `Add a note for ${goal.name}`} onClick={() => setEditingNote((v) => !v)}>
+      <button className={`icon-btn note-btn${hasDetails ? ' has-note' : ''}`} aria-expanded={open}
+        aria-label={`${hasDetails ? 'Edit' : 'Add'} ${goal.amountUnit ? goal.amountUnit + ' and ' : ''}notes for ${goal.name}`}
+        title={goal.amountUnit ? `Log ${goal.amountUnit} and notes` : 'Notes'} onClick={() => setOpen((v) => !v)}>
         <Icon name="note" size={20} />
       </button>
 
@@ -181,14 +199,65 @@ function GoalRow({ goal, date, locked, onEdit }: { goal: Goal; date: string; loc
         </div>
       )}
 
-      {editingNote && (
-        <div className="goal-note-editor">
-          <NoteBox value={note} autoFocus minRows={2} label={`Note for ${goal.name}`}
-            placeholder={isBad ? 'What happened? What set it off?' : 'How did it go?'}
+      {open && (
+        <div className="details">
+          {goal.amountUnit && (
+            <AmountField goal={goal} date={date} value={amount} disabled={locked} autoFocus />
+          )}
+          <NoteBox value={note} autoFocus={!goal.amountUnit} minRows={2} label={`Notes for ${goal.name}`}
+            placeholder={notePrompt(goal)}
             onSave={(text) => dispatch({ type: 'goalNote', date, id: goal.id, text })} />
-          <button className="link" onClick={() => setEditingNote(false)}>Done</button>
+          <div className="details-foot">
+            <button className="link" onClick={() => setOpen(false)}>Done</button>
+          </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Number field for a goal's daily amount (steps, minutes…). Saves on Enter, blur, or after a pause. */
+function AmountField({ goal, date, value, disabled, autoFocus }: { goal: Goal; date: string; value?: number; disabled: boolean; autoFocus?: boolean }) {
+  const { dispatch } = useStore();
+  const [text, setText] = useState(value !== undefined ? String(value) : '');
+  const timer = React.useRef<number | undefined>(undefined);
+  useEffect(() => setText(value !== undefined ? String(value) : ''), [value]);
+
+  const commit = (raw = text) => {
+    window.clearTimeout(timer.current);
+    const n = parseFloat(raw.replace(/,/g, ''));
+    const next = raw.trim() === '' ? null : !isNaN(n) && n >= 0 && n < 1e9 ? n : undefined;
+    if (next === undefined || next === (value ?? null)) return;
+    dispatch({ type: 'amount', date, id: goal.id, value: next });
+  };
+
+  const n = parseFloat(text.replace(/,/g, ''));
+  const target = goal.kind === 'good' ? goal.amountTarget : undefined;
+  return (
+    <div>
+      <form className="amount-row" onSubmit={(e) => { e.preventDefault(); commit(); }}>
+        <span className="weight-field">
+          <input className="input" inputMode="decimal" value={text} disabled={disabled} autoFocus={autoFocus}
+            placeholder={target ? `Target ${fmtNum(target)}` : '0'} aria-label={`${goal.amountUnit} for ${goal.name}`}
+            enterKeyHint="done"
+            onChange={(e) => {
+              setText(e.target.value);
+              window.clearTimeout(timer.current);
+              const v = e.target.value;
+              timer.current = window.setTimeout(() => commit(v), 700);
+            }}
+            onBlur={() => commit()} />
+          <span className="unit">{goal.amountUnit}</span>
+        </span>
+      </form>
+      {target ? (
+        <div style={{ marginTop: 6 }}>
+          <div className="amount-bar"><span style={{ width: `${Math.min(100, ((isNaN(n) ? 0 : n) / target) * 100)}%` }} /></div>
+          <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+            {!isNaN(n) && n >= target ? 'Target reached! Checked off.' : `${fmtNum(Math.max(0, target - (isNaN(n) ? 0 : n)))} ${goal.amountUnit} to go`}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }

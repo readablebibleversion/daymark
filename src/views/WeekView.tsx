@@ -6,6 +6,9 @@ import { useStore } from '../store';
 import { Goal } from '../types';
 import { cVar, goalColor } from '../ui';
 
+/** 8432 → 8.4k, 10512 → 10.5k (rounded down so it never overstates), 12 → 12 */
+const shortNum = (n: number) => (n >= 100000 ? `${Math.floor(n / 1000)}k` : n >= 1000 ? `${Math.floor(n / 100) / 10}k` : `${Math.round(n * 10) / 10}`);
+
 interface Props {
   weekStart: Date;
   setWeekStart: (d: Date) => void;
@@ -92,7 +95,7 @@ export function WeekView({ weekStart, setWeekStart, onEdit, onPickDay }: Props) 
                   const k = toKey(d);
                   return (
                     <td key={k}>
-                      <Cell goal={g} count={countOf(state, k, g.id)} future={k > todayKey} today={k === todayKey} hasNote={!!state.goalNotes[k]?.[g.id]}
+                      <Cell goal={g} count={countOf(state, k, g.id)} future={k > todayKey} today={k === todayKey} hasNote={!!state.goalNotes[k]?.[g.id]} amount={state.amounts[k]?.[g.id]}
                         onTap={() => dispatch({ type: 'tap', date: k, id: g.id })}
                         onClear={() => dispatch({ type: 'clear', date: k, id: g.id })} />
                     </td>
@@ -120,8 +123,8 @@ export function WeekView({ weekStart, setWeekStart, onEdit, onPickDay }: Props) 
 }
 
 function Cell({
-  goal, count, future, today, hasNote, onTap, onClear,
-}: { goal: Goal; count: number; future: boolean; today: boolean; hasNote: boolean; onTap: () => void; onClear: () => void }) {
+  goal, count, future, today, hasNote, amount, onTap, onClear,
+}: { goal: Goal; count: number; future: boolean; today: boolean; hasNote: boolean; amount?: number; onTap: () => void; onClear: () => void }) {
   const timer = useRef<number | undefined>(undefined);
   const held = useRef(false);
   const ratio = count / goal.perDay;
@@ -154,6 +157,7 @@ function Cell({
       }}
     >
       {hasNote && <span className="notedot" aria-label="Has a note" />}
+      {amount !== undefined && goal.amountUnit && <span className="cell-amt">{shortNum(amount)}</span>}
       {count > 0 && (full && goal.perDay === 1 ? <Icon name={goal.kind === 'bad' ? 'x' : 'check'} size={20} strokeWidth={2.6} /> : count)}
     </button>
   );

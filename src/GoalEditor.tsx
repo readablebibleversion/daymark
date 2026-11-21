@@ -3,6 +3,8 @@ import { useStore } from './store';
 import { Goal, GoalKind } from './types';
 import { cVar, GOAL_COLORS, NumStepper, Segmented } from './ui';
 
+const UNIT_PRESETS = ['steps', 'minutes', 'miles', 'reps', 'pages', 'glasses', 'hours'];
+
 /** Add/edit sheet built on <dialog>: bottom sheet on phones, centred on wider screens. */
 export function GoalEditor({ open, goal, onClose }: { open: boolean; goal: Goal | null; onClose: () => void }) {
   const { dispatch } = useStore();
@@ -12,6 +14,8 @@ export function GoalEditor({ open, goal, onClose }: { open: boolean; goal: Goal 
   const [points, setPoints] = useState(1);
   const [perDay, setPerDay] = useState(1);
   const [color, setColor] = useState(GOAL_COLORS[0]);
+  const [unit, setUnit] = useState('');
+  const [target, setTarget] = useState('');
 
   useEffect(() => {
     const d = ref.current;
@@ -22,13 +26,21 @@ export function GoalEditor({ open, goal, onClose }: { open: boolean; goal: Goal 
       setPoints(goal?.points ?? 1);
       setPerDay(goal?.perDay ?? 1);
       setColor(goal?.color ?? GOAL_COLORS[0]);
+      setUnit(goal?.amountUnit ?? '');
+      setTarget(goal?.amountTarget ? String(goal.amountTarget) : '');
       d.showModal();
     } else if (!open && d.open) d.close();
   }, [open, goal]);
 
   const save = (e: React.FormEvent) => {
     e.preventDefault();
-    const data = { name: name.trim(), kind, points, perDay, color };
+    const t = parseFloat(target.replace(/,/g, ''));
+    const amountUnit = unit.trim() || undefined;
+    const data = {
+      name: name.trim(), kind, points, perDay, color,
+      amountUnit,
+      amountTarget: amountUnit && kind === 'good' && t > 0 ? t : undefined,
+    };
     if (!data.name) return;
     if (goal) dispatch({ type: 'updateGoal', id: goal.id, patch: data });
     else dispatch({ type: 'addGoal', goal: data });
@@ -70,6 +82,27 @@ export function GoalEditor({ open, goal, onClose }: { open: boolean; goal: Goal 
               ))}
             </div>
           </>
+        )}
+
+        <span className="field-label">Track an amount <span style={{ textTransform: 'none', fontWeight: 500 }}>(optional)</span></span>
+        <div className="unit-chips" role="group" aria-label="Quick units">
+          {UNIT_PRESETS.map((u) => (
+            <button key={u} type="button" className="chip" aria-pressed={unit === u} onClick={() => setUnit(unit === u ? '' : u)}>{u}</button>
+          ))}
+        </div>
+        <div className="two" style={{ marginTop: 8 }}>
+          <input className="input" value={unit} onChange={(e) => setUnit(e.target.value)} maxLength={20}
+            placeholder="Unit, e.g. steps" aria-label="Amount unit" autoComplete="off" />
+          {kind === 'good' && (
+            <input className="input" inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)}
+              placeholder={unit ? `Daily target (${unit})` : 'Daily target'} aria-label="Daily target amount" disabled={!unit.trim()} />
+          )}
+        </div>
+        {unit.trim() && (
+          <p className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+            You'll be able to log how many {unit.trim()} each day
+            {kind === 'good' && parseFloat(target.replace(/,/g, '')) > 0 ? `; reaching ${Number(parseFloat(target.replace(/,/g, ''))).toLocaleString()} checks it off automatically` : ''}.
+          </p>
         )}
 
         <p className="muted" style={{ fontSize: 14, marginTop: 16 }}>

@@ -56,6 +56,17 @@ export function ProgressView({ weekStart }: { weekStart: Date }) {
               <p className="muted" style={{ fontSize: 13, marginTop: 6 }}>
                 {g.kind === 'bad' ? 'Clean' : 'Target met'} {kept}/{tracked.length} days this week · best streak {best}d
               </p>
+              {g.amountUnit && (() => {
+                const vals = days.map((d) => state.amounts[toKey(d)]?.[g.id]).filter((v): v is number => v !== undefined);
+                if (!vals.length) return null;
+                const total = vals.reduce((a, b) => a + b, 0);
+                const f = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 1 });
+                return (
+                  <p style={{ fontSize: 13, marginTop: 2 }}>
+                    <b>{f(total)}</b> {g.amountUnit} this week · avg <b>{f(total / vals.length)}</b> on {vals.length} day{vals.length === 1 ? '' : 's'} logged
+                  </p>
+                );
+              })()}
             </div>
           );
         })}

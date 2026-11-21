@@ -10,6 +10,10 @@ export interface Goal {
   /** daily target / max checks per day */
   perDay: number;
   color: string;
+  /** Optional amount to log each day, e.g. "steps", "minutes", "miles". */
+  amountUnit?: string;
+  /** Daily target for the amount; reaching it checks the goal off. */
+  amountTarget?: number;
   archived: boolean;
   /** YYYY-MM-DD */
   createdAt: string;
@@ -48,6 +52,8 @@ export interface AppState {
   notes: Record<string, string>;
   /** Note on a goal for a given day: goalNotes[dateKey][goalId] */
   goalNotes: Record<string, Record<string, string>>;
+  /** Amount logged on a goal for a given day: amounts[dateKey][goalId] */
+  amounts: Record<string, Record<string, number>>;
   /** Target weight (kg) and where the journey started. */
   weightGoal?: WeightGoal;
   /** True once the user picks a unit; until then it follows the device's region. */

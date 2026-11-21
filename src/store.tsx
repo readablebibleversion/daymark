@@ -15,7 +15,7 @@ export function localeUnit(): WeightUnit {
   }
 }
 
-export type NewGoal = Pick<Goal, 'name' | 'kind' | 'points' | 'perDay' | 'color'>;
+export type NewGoal = Pick<Goal, 'name' | 'kind' | 'points' | 'perDay' | 'color' | 'amountUnit' | 'amountTarget'>;
 
 type Action =
   | { type: 'hydrate'; state: AppState }
@@ -35,6 +35,7 @@ type Action =
   | { type: 'unit'; unit: WeightUnit }
   | { type: 'dayNote'; date: string; text: string }
   | { type: 'goalNote'; date: string; id: string; text: string }
+  | { type: 'amount'; date: string; id: string; value: number | null }
   | { type: 'weightGoal'; goal: WeightGoal | null };
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -51,6 +52,7 @@ function starterState(): AppState {
     tasks: {},
     notes: {},
     goalNotes: {},
+    amounts: {},
     weights: {},
     unit: localeUnit(),
     goals: [
@@ -112,7 +114,12 @@ function reducer(state: AppState, a: Action): AppState {
         const { [a.id]: _gone, ...rest } = day;
         if (Object.keys(rest).length) goalNotes[date] = rest;
       }
-      return { ...state, checks, goalNotes, goals: state.goals.filter((g) => g.id !== a.id) };
+      const amounts: AppState['amounts'] = {};
+      for (const [date, day] of Object.entries(state.amounts)) {
+        const { [a.id]: _gone, ...rest } = day;
+        if (Object.keys(rest).length) amounts[date] = rest;
+      }
+      return { ...state, checks, goalNotes, amounts, goals: state.goals.filter((g) => g.id !== a.id) };
     }
     case 'tap': {
       const goal = state.goals.find((g) => g.id === a.id);
@@ -168,6 +175,21 @@ function reducer(state: AppState, a: Action): AppState {
       else delete goalNotes[a.date];
       return { ...state, goalNotes };
     }
+    case 'amount': {
+      const day = { ...(state.amounts[a.date] ?? {}) };
+      if (a.value !== null && a.value > 0) day[a.id] = a.value;
+      else delete day[a.id];
+      const amounts = { ...state.amounts };
+      if (Object.keys(day).length) amounts[a.date] = day;
+      else delete amounts[a.date];
+      let next: AppState = { ...state, amounts };
+      // Hitting the daily target checks the goal off.
+      const goal = state.goals.find((g) => g.id === a.id);
+      if (goal?.kind === 'good' && goal.amountTarget && a.value !== null && a.value >= goal.amountTarget) {
+        next = setCount(next, a.date, a.id, goal.perDay);
+      }
+      return next;
+    }
     case 'weightGoal': {
       const { weightGoal: _old, ...rest } = state;
       return a.goal ? { ...rest, weightGoal: a.goal } : rest;
@@ -197,6 +219,7 @@ export function normalizeState(data: unknown): AppState | null {
     weights: isObj(s.weights) ? s.weights : {},
     notes: isObj(s.notes) ? (s.notes as AppState['notes']) : {},
     goalNotes: isObj(s.goalNotes) ? (s.goalNotes as AppState['goalNotes']) : {},
+    amounts: isObj(s.amounts) ? (s.amounts as AppState['amounts']) : {},
     weightGoal: isObj(s.weightGoal) && typeof s.weightGoal.goalKg === 'number' ? s.weightGoal : undefined,
     unit: s.unitSet ? (s.unit === 'lb' ? 'lb' : 'kg') : localeUnit(),
   };
