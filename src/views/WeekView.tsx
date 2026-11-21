@@ -92,7 +92,7 @@ export function WeekView({ weekStart, setWeekStart, onEdit, onPickDay }: Props) 
                   const k = toKey(d);
                   return (
                     <td key={k}>
-                      <Cell goal={g} count={countOf(state, k, g.id)} future={k > todayKey} today={k === todayKey}
+                      <Cell goal={g} count={countOf(state, k, g.id)} future={k > todayKey} today={k === todayKey} hasNote={!!state.goalNotes[k]?.[g.id]}
                         onTap={() => dispatch({ type: 'tap', date: k, id: g.id })}
                         onClear={() => dispatch({ type: 'clear', date: k, id: g.id })} />
                     </td>
@@ -120,8 +120,8 @@ export function WeekView({ weekStart, setWeekStart, onEdit, onPickDay }: Props) 
 }
 
 function Cell({
-  goal, count, future, today, onTap, onClear,
-}: { goal: Goal; count: number; future: boolean; today: boolean; onTap: () => void; onClear: () => void }) {
+  goal, count, future, today, hasNote, onTap, onClear,
+}: { goal: Goal; count: number; future: boolean; today: boolean; hasNote: boolean; onTap: () => void; onClear: () => void }) {
   const timer = useRef<number | undefined>(undefined);
   const held = useRef(false);
   const ratio = count / goal.perDay;
@@ -153,6 +153,7 @@ function Cell({
         else onTap();
       }}
     >
+      {hasNote && <span className="notedot" aria-label="Has a note" />}
       {count > 0 && (full && goal.perDay === 1 ? <Icon name={goal.kind === 'bad' ? 'x' : 'check'} size={20} strokeWidth={2.6} /> : count)}
     </button>
   );

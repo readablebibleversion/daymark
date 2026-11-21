@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Icon } from './icons';
 import { Goal } from './types';
 
@@ -49,14 +49,16 @@ export function NumStepper({
   );
 }
 
-function useWidth<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
+export function useWidth<T extends HTMLElement>() {
   const [w, setW] = useState(0);
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver(([e]) => setW(e.contentRect.width));
-    ro.observe(ref.current);
-    return () => ro.disconnect();
+  const ro = useRef<ResizeObserver | null>(null);
+  // Callback ref, so it keeps measuring even if the element is swapped for another one.
+  const ref = useCallback((el: T | null) => {
+    ro.current?.disconnect();
+    if (!el) return;
+    setW(el.getBoundingClientRect().width);
+    ro.current = new ResizeObserver(([e]) => setW(e.contentRect.width));
+    ro.current.observe(el);
   }, []);
   return [ref, w] as const;
 }
@@ -95,37 +97,6 @@ export function BarChart({ data, height = 150 }: { data: { label: string; value:
               </g>
             );
           })}
-        </svg>
-      )}
-    </div>
-  );
-}
-
-export function LineChart({ data, height = 140 }: { data: { label: string; value: number }[]; height?: number }) {
-  const [ref, w] = useWidth<HTMLDivElement>();
-  const padX = 8, top = 10, bottom = 22;
-  const vals = data.map((d) => d.value);
-  const lo = Math.min(...vals), hi = Math.max(...vals);
-  const pad = Math.max((hi - lo) * 0.15, 0.5);
-  const min = lo - pad, range = hi + pad - min;
-  const plot = height - top - bottom;
-  const x = (i: number) => (data.length > 1 ? padX + (i * (w - 2 * padX)) / (data.length - 1) : w / 2);
-  const y = (v: number) => top + plot - ((v - min) / range) * plot;
-  const pts = data.map((d, i) => `${x(i)},${y(d.value)}`).join(' ');
-  return (
-    <div ref={ref}>
-      {w > 0 && (
-        <svg className="chart" width={w} height={height} role="img"
-          aria-label={`Weight from ${data[0]?.value} to ${data[data.length - 1]?.value}`}>
-          {[0, 0.5, 1].map((f) => (
-            <line key={f} x1={0} x2={w} y1={top + f * plot} y2={top + f * plot} stroke="var(--border)" />
-          ))}
-          <polyline points={pts} fill="none" stroke="var(--accent)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
-          {data.map((d, i) => (
-            <circle key={i} cx={x(i)} cy={y(d.value)} r={4} fill="var(--card)" stroke="var(--accent)" strokeWidth={2} />
-          ))}
-          <text x={padX} y={height - 4}>{data[0]?.label}</text>
-          <text x={w - padX} y={height - 4} textAnchor="end">{data[data.length - 1]?.label}</text>
         </svg>
       )}
     </div>

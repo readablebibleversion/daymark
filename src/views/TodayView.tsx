@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { backupDue, snoozeBackup } from '../backup';
+import { NoteBox } from '../NoteBox';
+import { fmtW, weightSeries } from '../weight';
 import { addDays, fromKey, MONTHS, shortDate, toKey, today } from '../date';
 import { Face, Icon, Mood } from '../icons';
 import { countOf, dayScore, fromDisplayWeight, maxDayScore, signed, TASK_POINTS, tasksDone, toDisplayWeight } from '../scoring';
@@ -15,10 +17,12 @@ interface Props {
   onEdit: (g: Goal | null) => void;
   /** Jump to the backup settings. */
   onOpenBackup: () => void;
+  /** Open the Weight tab. */
+  onOpenWeight: () => void;
 }
 
-export function TodayView({ day, setDay, onEdit, onOpenBackup }: Props) {
-  const { state } = useStore();
+export function TodayView({ day, setDay, onEdit, onOpenBackup, onOpenWeight }: Props) {
+  const { state, dispatch } = useStore();
   const [nudge, setNudge] = useState(() => backupDue(state));
   const now = today();
   const key = toKey(day);
@@ -90,12 +94,12 @@ export function TodayView({ day, setDay, onEdit, onOpenBackup }: Props) {
 
           {good.length > 0 && <h2 className="section-label">Goals</h2>}
           {good.map((g) => (
-            <GoalRow key={g.id} goal={g} date={key} locked={isFuture} onEdit={() => onEdit(g)} />
+            <GoalRow key={`${g.id}-${key}`} goal={g} date={key} locked={isFuture} onEdit={() => onEdit(g)} />
           ))}
 
           {bad.length > 0 && <h2 className="section-label">Habits to avoid</h2>}
           {bad.map((g) => (
-            <GoalRow key={g.id} goal={g} date={key} locked={isFuture} onEdit={() => onEdit(g)} />
+            <GoalRow key={`${g.id}-${key}`} goal={g} date={key} locked={isFuture} onEdit={() => onEdit(g)} />
           ))}
 
           {active.length === 0 && (
@@ -110,7 +114,16 @@ export function TodayView({ day, setDay, onEdit, onOpenBackup }: Props) {
 
         <div className="side">
           <DayGoals date={key} isFuture={isFuture} isToday={isToday} />
-          {!isFuture && <WeightCard date={key} />}
+          <section className="card" aria-label="Notes">
+            <div className="card-title">
+              <span>Notes</span>
+              <span className="muted"><Icon name="note" size={20} /></span>
+            </div>
+            <NoteBox key={key} value={state.notes[key] ?? ''} minRows={3} label="Notes for the day"
+              placeholder={isToday ? 'How was today? Wins, struggles, anything worth remembering…' : 'Notes for this day…'}
+              onSave={(text) => dispatch({ type: 'dayNote', date: key, text })} />
+          </section>
+          {!isFuture && <WeightCard date={key} onOpenWeight={onOpenWeight} />}
         </div>
       </div>
     </>
@@ -125,6 +138,8 @@ function GoalRow({ goal, date, locked, onEdit }: { goal: Goal; date: string; loc
   const full = count >= goal.perDay;
   const pts = count * goal.points;
   const set = (n: number) => dispatch({ type: 'setCount', date, id: goal.id, n });
+  const note = state.goalNotes[date]?.[goal.id] ?? '';
+  const [editingNote, setEditingNote] = useState(false);
 
   const detail = isBad
     ? count ? `Happened ${count}× · −${pts} pts` : `Clean so far · −${goal.points} pts each time`
@@ -141,6 +156,12 @@ function GoalRow({ goal, date, locked, onEdit }: { goal: Goal; date: string; loc
             {Array.from({ length: goal.perDay }, (_, i) => <span key={i} className={i < count ? 'on' : ''} />)}
           </div>
         )}
+        {note && !editingNote && <div className="goal-note">{note}</div>}
+      </button>
+
+      <button className={`icon-btn note-btn${note ? ' has-note' : ''}`} aria-expanded={editingNote}
+        aria-label={note ? `Edit note for ${goal.name}` : `Add a note for ${goal.name}`} onClick={() => setEditingNote((v) => !v)}>
+        <Icon name="note" size={20} />
       </button>
 
       {single && !isBad ? (
@@ -157,6 +178,15 @@ function GoalRow({ goal, date, locked, onEdit }: { goal: Goal; date: string; loc
           <button className="round fill" aria-label={`One more: ${goal.name}`} disabled={locked || full} onClick={() => set(count + 1)}>
             <Icon name="plus" />
           </button>
+        </div>
+      )}
+
+      {editingNote && (
+        <div className="goal-note-editor">
+          <NoteBox value={note} autoFocus minRows={2} label={`Note for ${goal.name}`}
+            placeholder={isBad ? 'What happened? What set it off?' : 'How did it go?'}
+            onSave={(text) => dispatch({ type: 'goalNote', date, id: goal.id, text })} />
+          <button className="link" onClick={() => setEditingNote(false)}>Done</button>
         </div>
       )}
     </div>
@@ -223,7 +253,7 @@ function DayGoals({ date, isFuture, isToday }: { date: string; isFuture: boolean
 }
 
 /** Body weight for a day. Stored in kg, shown in the chosen unit. */
-function WeightCard({ date }: { date: string }) {
+function WeightCard({ date, onOpenWeight }: { date: string; onOpenWeight: () => void }) {
   const { state, dispatch } = useStore();
   const unit = state.unit;
   const saved = state.weights[date];
@@ -231,6 +261,7 @@ function WeightCard({ date }: { date: string }) {
   useEffect(() => setValue(saved ? String(toDisplayWeight(saved, unit)) : ''), [saved, unit, date]);
 
   const prevKey = Object.keys(state.weights).filter((k) => k < date).sort().pop();
+  const trend = weightSeries(state.weights).filter((p) => p.key <= date).pop();
   const diff = saved && prevKey ? Math.round((toDisplayWeight(saved, unit) - toDisplayWeight(state.weights[prevKey], unit)) * 10) / 10 : null;
   const parsed = parseFloat(value.replace(',', '.'));
   const valid = !isNaN(parsed) && parsed > 0 && parsed < 1000;
@@ -263,6 +294,12 @@ function WeightCard({ date }: { date: string }) {
       {diff !== null && prevKey && (
         <p className="muted" style={{ fontSize: 13, marginTop: 8, fontWeight: 600 }}>
           {diff > 0 ? '▲ +' : diff < 0 ? '▼ ' : ''}{diff} {unit} since {shortDate(fromKey(prevKey))}
+        </p>
+      )}
+      {trend && (
+        <p style={{ fontSize: 14, marginTop: 8 }}>
+          Trend <b>{fmtW(trend.trendKg, unit)} {unit}</b>{' '}
+          <button className="link" onClick={onOpenWeight}>See chart →</button>
         </p>
       )}
     </section>

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import { toKey, today } from './date';
-import { AppState, Goal, ThemePref, WeightUnit } from './types';
+import { AppState, Goal, ThemePref, WeightGoal, WeightUnit } from './types';
 
 const STORAGE_KEY = 'daymark:v1';
 
@@ -32,7 +32,10 @@ type Action =
   | { type: 'toggleTask'; date: string; id: string }
   | { type: 'removeTask'; date: string; id: string }
   | { type: 'weight'; date: string; kg: number | null }
-  | { type: 'unit'; unit: WeightUnit };
+  | { type: 'unit'; unit: WeightUnit }
+  | { type: 'dayNote'; date: string; text: string }
+  | { type: 'goalNote'; date: string; id: string; text: string }
+  | { type: 'weightGoal'; goal: WeightGoal | null };
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -46,6 +49,8 @@ function starterState(): AppState {
     theme: 'system',
     checks: {},
     tasks: {},
+    notes: {},
+    goalNotes: {},
     weights: {},
     unit: localeUnit(),
     goals: [
@@ -102,7 +107,12 @@ function reducer(state: AppState, a: Action): AppState {
         const { [a.id]: _removed, ...rest } = day;
         if (Object.keys(rest).length) checks[date] = rest;
       }
-      return { ...state, checks, goals: state.goals.filter((g) => g.id !== a.id) };
+      const goalNotes: AppState['goalNotes'] = {};
+      for (const [date, day] of Object.entries(state.goalNotes)) {
+        const { [a.id]: _gone, ...rest } = day;
+        if (Object.keys(rest).length) goalNotes[date] = rest;
+      }
+      return { ...state, checks, goalNotes, goals: state.goals.filter((g) => g.id !== a.id) };
     }
     case 'tap': {
       const goal = state.goals.find((g) => g.id === a.id);
@@ -143,6 +153,25 @@ function reducer(state: AppState, a: Action): AppState {
     }
     case 'unit':
       return { ...state, unit: a.unit, unitSet: true };
+    case 'dayNote': {
+      const notes = { ...state.notes };
+      if (a.text.trim()) notes[a.date] = a.text;
+      else delete notes[a.date];
+      return { ...state, notes };
+    }
+    case 'goalNote': {
+      const day = { ...(state.goalNotes[a.date] ?? {}) };
+      if (a.text.trim()) day[a.id] = a.text;
+      else delete day[a.id];
+      const goalNotes = { ...state.goalNotes };
+      if (Object.keys(day).length) goalNotes[a.date] = day;
+      else delete goalNotes[a.date];
+      return { ...state, goalNotes };
+    }
+    case 'weightGoal': {
+      const { weightGoal: _old, ...rest } = state;
+      return a.goal ? { ...rest, weightGoal: a.goal } : rest;
+    }
   }
 }
 
@@ -166,6 +195,9 @@ export function normalizeState(data: unknown): AppState | null {
     theme: s.theme ?? 'system',
     tasks: isObj(s.tasks) ? s.tasks : {},
     weights: isObj(s.weights) ? s.weights : {},
+    notes: isObj(s.notes) ? (s.notes as AppState['notes']) : {},
+    goalNotes: isObj(s.goalNotes) ? (s.goalNotes as AppState['goalNotes']) : {},
+    weightGoal: isObj(s.weightGoal) && typeof s.weightGoal.goalKg === 'number' ? s.weightGoal : undefined,
     unit: s.unitSet ? (s.unit === 'lb' ? 'lb' : 'kg') : localeUnit(),
   };
 }

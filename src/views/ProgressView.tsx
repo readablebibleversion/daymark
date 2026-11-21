@@ -1,9 +1,9 @@
 import React from 'react';
 import { addDays, DAY_SHORT, formatWeek, startOfWeek, toKey, today, weekDays } from '../date';
 import { Icon } from '../icons';
-import { bestStreak, currentStreak, dayKept, dayScore, earliestDate, signed, toDisplayWeight, weekScore } from '../scoring';
+import { bestStreak, currentStreak, dayKept, dayScore, earliestDate, signed, weekScore } from '../scoring';
 import { useStore } from '../store';
-import { BarChart, cVar, goalColor, LineChart, ProgressBar } from '../ui';
+import { BarChart, cVar, goalColor, ProgressBar } from '../ui';
 
 export function ProgressView({ weekStart }: { weekStart: Date }) {
   const { state } = useStore();
@@ -32,8 +32,6 @@ export function ProgressView({ weekStart }: { weekStart: Date }) {
         <section className="card"><div className="card-title">Daily score</div><BarChart data={daily} /></section>
         <section className="card"><div className="card-title">Last 8 weeks</div><BarChart data={weekly} /></section>
       </div>
-
-      <WeightProgress />
 
       <section className="card">
         <div className="card-title">Streaks</div>
@@ -66,32 +64,3 @@ export function ProgressView({ weekStart }: { weekStart: Date }) {
   );
 }
 
-function WeightProgress() {
-  const { state } = useStore();
-  const unit = state.unit;
-  const keys = Object.keys(state.weights).sort().slice(-30);
-  const pts = keys.map((k) => ({ label: `${Number(k.slice(5, 7))}/${Number(k.slice(8))}`, value: toDisplayWeight(state.weights[k], unit) }));
-  const first = pts[0]?.value;
-  const last = pts[pts.length - 1]?.value;
-  const change = pts.length > 1 ? Math.round((last - first) * 10) / 10 : null;
-  return (
-    <section className="card">
-      <div className="card-title">
-        <span>Weight</span>
-        {pts.length > 0 && <span className="muted" style={{ fontSize: 12, fontWeight: 500 }}>last {pts.length} entries</span>}
-      </div>
-      {pts.length === 0 ? (
-        <p className="muted">Log your weight on the Today tab to see a trend here.</p>
-      ) : (
-        <>
-          <div className="mini-stats">
-            <div><div className="k">Latest</div><div className="v">{last} {unit}</div></div>
-            <div><div className="k">Change</div><div className="v">{change === null ? '—' : `${change > 0 ? '+' : ''}${change} ${unit}`}</div></div>
-            <div><div className="k">Lowest</div><div className="v">{Math.min(...pts.map((p) => p.value))} {unit}</div></div>
-          </div>
-          {pts.length > 1 && <LineChart data={pts} />}
-        </>
-      )}
-    </section>
-  );
-}

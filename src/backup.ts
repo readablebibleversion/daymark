@@ -27,7 +27,7 @@ export const lastBackup = (): Date | null => {
 
 /** Days that have any check, day goal or weight entry. */
 export function trackedDays(s: AppState) {
-  return new Set([...Object.keys(s.checks), ...Object.keys(s.tasks), ...Object.keys(s.weights)]).size;
+  return new Set([...Object.keys(s.checks), ...Object.keys(s.tasks), ...Object.keys(s.weights), ...Object.keys(s.notes)]).size;
 }
 
 /** Nudge when there's a week of data and no backup in the last 30 days (unless snoozed). */

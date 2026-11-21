@@ -8,11 +8,13 @@ import { GoalsView } from './views/GoalsView';
 import { ProgressView } from './views/ProgressView';
 import { TodayView } from './views/TodayView';
 import { WeekView } from './views/WeekView';
+import { WeightView } from './views/WeightView';
 
-type Tab = 'day' | 'week' | 'progress' | 'goals';
+type Tab = 'day' | 'week' | 'weight' | 'progress' | 'goals';
 const TABS: { key: Tab; label: string; icon: IconName }[] = [
   { key: 'day', label: 'Today', icon: 'today' },
   { key: 'week', label: 'Week', icon: 'grid' },
+  { key: 'weight', label: 'Weight', icon: 'scale' },
   { key: 'progress', label: 'Progress', icon: 'chart' },
   { key: 'goals', label: 'Goals', icon: 'list' },
 ];
@@ -87,15 +89,16 @@ export function App({ onLock }: { onLock: () => void }) {
         </div>
       </header>
 
-      <main className={tab === 'day' || tab === 'progress' ? 'wide' : undefined}>
+      <main className={tab === 'day' || tab === 'progress' || tab === 'weight' ? 'wide' : undefined}>
         {tab === 'day' && (
-          <TodayView day={day} setDay={setDay} onEdit={setEditing}
+          <TodayView day={day} setDay={setDay} onEdit={setEditing} onOpenWeight={() => go('weight')}
             onOpenBackup={() => { go('goals'); setTimeout(() => document.getElementById('backup')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }} />
         )}
         {tab === 'week' && (
           <WeekView weekStart={weekStart} setWeekStart={setWeekStart} onEdit={setEditing}
             onPickDay={(d) => { setDay(d); go('day'); }} />
         )}
+        {tab === 'weight' && <WeightView />}
         {tab === 'progress' && <ProgressView weekStart={weekStart} />}
         {tab === 'goals' && <GoalsView onEdit={setEditing} />}
       </main>

@@ -8,9 +8,10 @@ A simple daily goal and habit tracker. It's a fast, mobile-first website that yo
 
 - **Today (opens first).** A score card with a face that's happy when the day is positive and sad when it's negative. Your daily goals are big rows: tap the circle to finish a once-a-day goal, or use **− / +** for repeats (water ×6) and for habits you're avoiding. Step through days with **‹ ›**.
 - **Day goals.** One-off goals for a single day. Each one you finish gives a happy face and **+1**.
-- **Weight.** Log your weight in lb or kg (it defaults to lb on US devices; change it under Goals → Settings). You see the change since your last entry and a trend chart.
+- **Notes.** Write a note for each day (Today → Notes), and a note on any goal for that day (the note icon on each goal row). Notes save as you type. Goals with a note get a small dot on the Week grid.
+- **Weight (its own tab).** Your *trend weight* is a 10%-per-day exponential moving average that smooths out water and salt swings, shown with your weekly rate. The chart (1M / 3M / 6M / 1Y / All) draws each weigh-in as a dot joined to the trend line, plus your goal line. A goal card shows progress from your start weight, round-number milestones (every 5 lb or 2 kg), how much is left, and a projected date at your current pace. You also get a weigh-in history and can log any past date. Pounds by default on US devices; change it under Goals → Settings. The design takes its ideas from trend-based scale apps like Happy Scale but uses Daymark's own look. You see the change since your last entry and a trend chart.
 - **Week.** The classic grid with one row per goal and one column per day. Tap a square to check it off (tap again for repeats), and press and hold to clear it. Tap a date to open that day.
-- **Progress.** Daily and 8-week score charts, a weight trend, and streaks for each goal (days you hit the target, or days a habit stayed clean).
+- **Progress.** Daily and 8-week score charts, and streaks for each goal (days you hit the target, or days a habit stayed clean).
 - **Goals.** Add, edit, reorder, archive, restore and delete goals. Settings for theme (system/light/dark) and weight unit are here too.
 - **Layout.** Normal page scrolling, a sticky header, a bottom tab bar on phones, and a two-column layout on desktop.
 - **Lock screen.** The site asks for a password before showing anything. Tick *Keep me signed in* to skip it for 30 days on that device, and use the lock icon in the header to lock it again. Only a salted SHA-256 hash of the password is in the code (`src/lock.ts`); to change the password, replace `PASS_HASH` with the output of `node -e "console.log(require('crypto').createHash('sha256').update('daymark-lock-v1:' + 'NEWPASSWORD').digest('hex'))"`. Because the site is static, this is a privacy screen for your device, not server-side security.
@@ -68,6 +69,8 @@ src/views/                Today, Week, Progress, Goals
 src/GoalEditor.tsx        add/edit sheet (<dialog>)
 src/store.tsx             state, actions, localStorage persistence, data validation
 src/backup.ts             backup file export/import, reminder timing
+src/weight.ts             trend (EMA), weekly rate, goal projection, milestones
+src/NoteBox.tsx           auto-growing, auto-saving note field
 src/scoring.ts            scores, streaks, weight units
 src/date.ts               date helpers (weeks start Monday)
 src/ui.tsx, icons.tsx     small UI pieces, SVG charts and icons
