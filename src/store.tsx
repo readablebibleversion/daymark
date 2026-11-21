@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import { toKey, today } from './date';
 import { AppState, Goal, ThemePref, WeightGoal, WeightUnit } from './types';
+import { OLD_TO_NEW_COLOR } from './ui';
 
 const STORAGE_KEY = 'daymark:v1';
 
@@ -56,10 +57,10 @@ function starterState(): AppState {
     weights: {},
     unit: localeUnit(),
     goals: [
-      g('Move for 30 min', 'good', 3, 1, '#2E9D6A'),
-      g('Drink a glass of water', 'good', 1, 6, '#3B82C4'),
-      g('Read 20 pages', 'good', 2, 1, '#7C5CE0'),
-      g('Late-night snacking', 'bad', 2, 3, '#D9484D'),
+      g('Move for 30 min', 'good', 3, 1, '#2BC47F'),
+      g('Drink a glass of water', 'good', 1, 6, '#4AA8FF'),
+      g('Read 20 pages', 'good', 2, 1, '#9B7BFF'),
+      g('Late-night snacking', 'bad', 2, 3, '#FF5A5F'),
     ],
   };
 }
@@ -214,6 +215,7 @@ export function normalizeState(data: unknown): AppState | null {
   const s = data as unknown as AppState;
   return {
     ...s,
+    goals: s.goals.map((g) => (OLD_TO_NEW_COLOR[g.color] ? { ...g, color: OLD_TO_NEW_COLOR[g.color] } : g)),
     theme: s.theme ?? 'system',
     tasks: isObj(s.tasks) ? s.tasks : {},
     weights: isObj(s.weights) ? s.weights : {},

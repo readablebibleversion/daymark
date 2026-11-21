@@ -4,6 +4,7 @@ import { App } from './App';
 import { isUnlocked, lock } from './lock';
 import { LockScreen } from './LockScreen';
 import { StoreProvider } from './store';
+import '@fontsource-variable/fredoka/wght.css';
 import './styles.css';
 
 /** Shows the lock screen until the password is entered; the app (and its data) only loads after. */

@@ -31,7 +31,7 @@ function useResolvedTheme() {
   const mode = state.theme === 'system' ? (systemDark ? 'dark' : 'light') : state.theme;
   useEffect(() => {
     document.documentElement.dataset.theme = mode;
-    const color = mode === 'dark' ? '#111315' : '#F6F4EF';
+    const color = mode === 'dark' ? '#2A2452' : '#FFF6E0';
     document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', color));
   }, [mode]);
   return mode;

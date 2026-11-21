@@ -2,7 +2,13 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Icon } from './icons';
 import { Goal } from './types';
 
-export const GOAL_COLORS = ['#2E9D6A', '#3B82C4', '#7C5CE0', '#E39B2D', '#D6458C', '#139C9C', '#D9484D', '#64748B'];
+export const GOAL_COLORS = ['#2BC47F', '#4AA8FF', '#9B7BFF', '#FFB020', '#FF6FB1', '#22C7C7', '#FF5A5F', '#8C8FA3'];
+
+/** Earlier, muted palette → its brighter sticker-book replacement (applied when data loads). */
+export const OLD_TO_NEW_COLOR: Record<string, string> = {
+  '#2E9D6A': '#2BC47F', '#3B82C4': '#4AA8FF', '#7C5CE0': '#9B7BFF', '#E39B2D': '#FFB020',
+  '#D6458C': '#FF6FB1', '#139C9C': '#22C7C7', '#D9484D': '#FF5A5F', '#64748B': '#8C8FA3',
+};
 
 /** CSS colour for a goal: habits always use the theme's "bad" red. */
 export const goalColor = (g: Goal) => (g.kind === 'bad' ? 'var(--bad)' : g.color);
@@ -87,7 +93,7 @@ export function BarChart({ data, height = 150 }: { data: { label: string; value:
             const fill = d.value < 0 ? 'var(--bad)' : d.highlight ? 'var(--accent)' : 'var(--good)';
             return (
               <g key={i}>
-                {d.value !== 0 && <rect x={x} y={y} width={bw} height={Math.max(h, 2)} rx={5} fill={fill} />}
+                {d.value !== 0 && <rect x={x} y={y} width={bw} height={Math.max(h, 2)} rx={6} fill={fill} stroke="var(--ink)" strokeWidth={2} />}
                 {d.value !== 0 && (
                   <text x={x + bw / 2} y={d.value > 0 ? y - 4 : y + h + 12} textAnchor="middle">{d.value}</text>
                 )}

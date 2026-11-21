@@ -1,6 +1,6 @@
 # Daymark
 
-A simple daily goal and habit tracker. It's a fast, mobile-first website that you can also install on your phone as an app (PWA) and use offline.
+A simple daily goal and habit tracker with a bright, cartoon "sticker book" look. It's a fast, mobile-first website that you can also install on your phone as an app (PWA) and use offline.
 
 **Live:** https://readablebibleversion.github.io/daymark/
 
@@ -14,6 +14,7 @@ A simple daily goal and habit tracker. It's a fast, mobile-first website that yo
 - **Week.** The classic grid with one row per goal and one column per day. Tap a square to check it off (tap again for repeats), and press and hold to clear it. Tap a date to open that day.
 - **Progress.** Daily and 8-week score charts, and streaks for each goal (days you hit the target, or days a habit stayed clean).
 - **Goals.** Add, edit, reorder, archive, restore and delete goals. Settings for theme (system/light/dark) and weight unit are here too.
+- **Look.** Sticker-book style: thick ink outlines, chunky offset shadows, buttons that press down, bright flat colours, and the rounded Fredoka font (bundled, so it works offline). Light and dark versions. All styling lives in `src/styles.css`; the colour tokens are at the top.
 - **Layout.** Normal page scrolling, a sticky header, a bottom tab bar on phones, and a two-column layout on desktop.
 - **Lock screen.** The site asks for a password before showing anything. Tick *Keep me signed in* to skip it for 30 days on that device, and use the lock icon in the header to lock it again. Only a salted SHA-256 hash of the password is in the code (`src/lock.ts`); to change the password, replace `PASS_HASH` with the output of `node -e "console.log(require('crypto').createHash('sha256').update('daymark-lock-v1:' + 'NEWPASSWORD').digest('hex'))"`. Because the site is static, this is a privacy screen for your device, not server-side security.
 - **Local only.** Data lives in your browser's localStorage on that device. There is no account and no server.

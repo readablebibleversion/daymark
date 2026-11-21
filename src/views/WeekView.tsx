@@ -157,8 +157,9 @@ function Cell({
       }}
     >
       {hasNote && <span className="notedot" aria-label="Has a note" />}
-      {amount !== undefined && goal.amountUnit && <span className="cell-amt">{shortNum(amount)}</span>}
-      {count > 0 && (full && goal.perDay === 1 ? <Icon name={goal.kind === 'bad' ? 'x' : 'check'} size={20} strokeWidth={2.6} /> : count)}
+      {amount !== undefined && goal.amountUnit ? (
+        <span className="cell-amt">{shortNum(amount)}</span>
+      ) : count > 0 && (full && goal.perDay === 1 ? <Icon name={goal.kind === 'bad' ? 'x' : 'check'} size={20} strokeWidth={2.6} /> : count)}
     </button>
   );
 }

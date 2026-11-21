@@ -48,10 +48,11 @@ export type Mood = 'happy' | 'neutral' | 'sad';
 export function Face({ mood, size = 28, color, filled = true }: { mood: Mood; size?: number; color: string; filled?: boolean }) {
   const mouth =
     mood === 'happy' ? 'M8 14c1.1 1.6 2.4 2.4 4 2.4s2.9-.8 4-2.4' : mood === 'sad' ? 'M8 17c1.1-1.6 2.4-2.4 4-2.4s2.9.8 4 2.4' : 'M8.5 15.5h7';
-  const ink = filled ? '#fff' : color;
+  // Sticker style: filled faces get a dark ink outline and ink features.
+  const ink = filled ? 'var(--ink)' : color;
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <circle cx="12" cy="12" r={filled ? 11 : 10} fill={filled ? color : 'none'} stroke={filled ? 'none' : color} strokeWidth="2" />
+      <circle cx="12" cy="12" r="10.5" fill={filled ? color : 'none'} stroke={filled ? 'var(--ink)' : color} strokeWidth={filled ? 1.8 : 2} />
       <circle cx="8.6" cy="9.6" r="1.4" fill={ink} />
       <circle cx="15.4" cy="9.6" r="1.4" fill={ink} />
       <path d={mouth} fill="none" stroke={ink} strokeWidth="2" strokeLinecap="round" />

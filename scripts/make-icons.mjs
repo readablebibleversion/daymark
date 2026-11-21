@@ -5,9 +5,9 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { PNG } = require('pngjs');
 
-const TILE = [0xe3, 0x9b, 0x2d];
-const INK = [0x1b, 0x1d, 0x21];
-const PAPER = [0xf6, 0xf4, 0xef];
+const TILE = [0xff, 0xc9, 0x3c];
+const INK = [0x1d, 0x1a, 0x33];
+const PAPER = [0xff, 0xf6, 0xe0];
 const TILT = (-6 * Math.PI) / 180;
 const CHECK = [[0.29, 0.52], [0.44, 0.67], [0.72, 0.36]];
 
@@ -42,13 +42,17 @@ function draw(size, inset, bg) {
           const x = nx * Math.cos(-TILT) - ny * Math.sin(-TILT) + 0.5;
           const y = nx * Math.sin(-TILT) + ny * Math.cos(-TILT) + 0.5;
           // Scale shapes into the inset tile area.
-          const u = (x - inset) / (1 - 2 * inset);
-          const v = (y - inset) / (1 - 2 * inset);
+          const u = (x - inset) / (1 - 2 * inset - 0.04);
+          const v = (y - inset) / (1 - 2 * inset - 0.04);
           let c = bg, ca = bg ? 1 : 0;
+          // Hard "sticker" shadow, offset down-right.
+          if (inRoundRect(u - 0.06, v - 0.06, 0, 0, 1, 1, 0.24)) { c = INK; ca = 1; }
           if (inRoundRect(u, v, 0, 0, 1, 1, 0.24)) {
-            c = TILE; ca = 1;
+            // Thick ink outline around the tile.
+            const B = 0.055;
+            c = inRoundRect(u, v, B, B, 1 - B, 1 - B, 0.24 - B) ? TILE : INK; ca = 1;
             const d = Math.min(segDist(u, v, CHECK[0], CHECK[1]), segDist(u, v, CHECK[1], CHECK[2]));
-            if (d < 0.06) c = INK;
+            if (d < 0.065 && inRoundRect(u, v, 0.055, 0.055, 0.945, 0.945, 0.185)) c = INK;
           }
           if (ca) { r += c[0]; g += c[1]; b += c[2]; a += 1; }
         }

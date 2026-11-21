@@ -187,11 +187,12 @@ function WeightChart({
                 stroke={good ? 'var(--good)' : 'var(--bad)'} strokeOpacity={0.45} strokeWidth={1.5} />
             );
           })}
-          <path d={trendPath} fill="none" stroke="var(--accent)" strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
+          <path d={trendPath} fill="none" stroke="var(--ink)" strokeWidth={6.5} strokeLinejoin="round" strokeLinecap="round" />
+          <path d={trendPath} fill="none" stroke="var(--accent)" strokeWidth={3.5} strokeLinejoin="round" strokeLinecap="round" />
           {points.map((p) => (
-            <circle key={`d${p.key}`} cx={x(p.date)} cy={y(kgTo(p.kg, unit))} r={3} fill="var(--card)" stroke="var(--muted)" strokeWidth={1.5} />
+            <circle key={`d${p.key}`} cx={x(p.date)} cy={y(kgTo(p.kg, unit))} r={3.2} fill="var(--card)" stroke="var(--ink)" strokeWidth={1.6} />
           ))}
-          <circle cx={x(lastP.date)} cy={y(kgTo(lastP.trendKg, unit))} r={5.5} fill="var(--accent)" stroke="var(--card)" strokeWidth={2} />
+          <circle cx={x(lastP.date)} cy={y(kgTo(lastP.trendKg, unit))} r={6.5} fill="var(--accent)" stroke="var(--ink)" strokeWidth={2.5} />
           <text x={padL} y={h - 6}>{shortDate(new Date(t0))}</text>
           <text x={(padL + w - padR) / 2} y={h - 6} textAnchor="middle">{shortDate(mid)}</text>
           <text x={w - padR} y={h - 6} textAnchor="end">{shortDate(new Date(t1))}</text>
