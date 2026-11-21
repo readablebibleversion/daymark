@@ -74,9 +74,11 @@ export function App({ onLock }: { onLock: () => void }) {
     <>
       <header className={`topbar${scrolled ? ' scrolled' : ''}`}>
         <div className="topbar-inner">
-          <div className="brand">
-            <span className="logo"><Icon name="check" size={19} strokeWidth={3} /></span>
-            Daymark
+          <div className="brand-wrap">
+            <button className="brand" aria-label="Daymark: go to today" onClick={() => { setDay(today()); go('day'); }}>
+              <span className="logo"><Icon name="check" size={19} strokeWidth={3} /></span>
+              Daymark
+            </button>
           </div>
           <div className="desktop-tabs">{tabs}</div>
           <button className="icon-btn" aria-label="Lock" title="Lock" onClick={onLock}>
