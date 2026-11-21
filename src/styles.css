@@ -320,3 +320,14 @@ dialog.sheet[open] { animation: up 0.22s ease-out; }
   .desktop-tabs { display: block; }
   .mobile-tabs { display: none; }
 }
+
+/* ---------- Backup ---------- */
+.backup-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.backup-actions .btn { flex: 1 1 160px; }
+.confirm { margin-top: 12px; padding: 12px; border-radius: 14px; background: var(--today); border: 1px solid var(--border); font-size: 14px; }
+.nudge {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding: 10px 12px;
+  border-radius: 14px; background: var(--card); border: 1px solid var(--border); font-size: 14px;
+}
+.nudge .grow { flex: 1; min-width: 0; }
+#backup { scroll-margin-top: calc(72px + env(safe-area-inset-top)); }

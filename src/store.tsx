@@ -137,16 +137,33 @@ function reducer(state: AppState, a: Action): AppState {
 
 const StoreContext = createContext<{ state: AppState; dispatch: React.Dispatch<Action> } | null>(null);
 
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * Checks that parsed JSON looks like Daymark data and fills fields added after the first release.
+ * Returns null when it is not usable.
+ */
+export function normalizeState(data: unknown): AppState | null {
+  if (!isObj(data) || data.version !== 1 || !Array.isArray(data.goals) || !isObj(data.checks)) return null;
+  const goalsOk = data.goals.every(
+    (g) => isObj(g) && typeof g.id === 'string' && typeof g.name === 'string' && (g.kind === 'good' || g.kind === 'bad'),
+  );
+  if (!goalsOk) return null;
+  const s = data as unknown as AppState;
+  return {
+    ...s,
+    theme: s.theme ?? 'system',
+    tasks: isObj(s.tasks) ? s.tasks : {},
+    weights: isObj(s.weights) ? s.weights : {},
+    unit: s.unit === 'lb' ? 'lb' : 'kg',
+  };
+}
+
 function load(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw) as AppState;
-      if (saved?.version === 1 && Array.isArray(saved.goals)) {
-        // Fill fields added after the first release.
-        return { ...saved, tasks: saved.tasks ?? {}, weights: saved.weights ?? {}, unit: saved.unit ?? 'kg' };
-      }
-    }
+    const saved = raw ? normalizeState(JSON.parse(raw)) : null;
+    if (saved) return saved;
   } catch {
     // Storage blocked or corrupt: start fresh.
   }

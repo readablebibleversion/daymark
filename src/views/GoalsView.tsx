@@ -3,6 +3,7 @@ import { Icon } from '../icons';
 import { useStore } from '../store';
 import { Goal, ThemePref, WeightUnit } from '../types';
 import { cVar, goalColor, Segmented } from '../ui';
+import { BackupCard } from './BackupCard';
 
 export function GoalsView({ onEdit }: { onEdit: (g: Goal | null) => void }) {
   const { state, dispatch } = useStore();
@@ -72,6 +73,8 @@ export function GoalsView({ onEdit }: { onEdit: (g: Goal | null) => void }) {
         </section>
       )}
 
+      <BackupCard />
+
       <section className="card">
         <div className="card-title">Settings</div>
         <span className="field-label" style={{ marginTop: 0 }}>Appearance</span>
@@ -90,7 +93,7 @@ export function GoalsView({ onEdit }: { onEdit: (g: Goal | null) => void }) {
           days you hit a goal&apos;s daily target, or days a habit stayed clean.
         </p>
       </section>
-      <p className="muted" style={{ textAlign: 'center', fontSize: 13 }}>Your data is stored only on this device.</p>
+      <p className="muted" style={{ textAlign: 'center', fontSize: 13 }}>Your data is stored only on this device. Use Backup to keep a copy.</p>
     </>
   );
 }

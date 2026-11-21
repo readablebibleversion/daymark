@@ -85,7 +85,10 @@ export function App() {
       </header>
 
       <main className={tab === 'day' || tab === 'progress' ? 'wide' : undefined}>
-        {tab === 'day' && <TodayView day={day} setDay={setDay} onEdit={setEditing} />}
+        {tab === 'day' && (
+          <TodayView day={day} setDay={setDay} onEdit={setEditing}
+            onOpenBackup={() => { go('goals'); setTimeout(() => document.getElementById('backup')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }} />
+        )}
         {tab === 'week' && (
           <WeekView weekStart={weekStart} setWeekStart={setWeekStart} onEdit={setEditing}
             onPickDay={(d) => { setDay(d); go('day'); }} />

@@ -14,6 +14,7 @@ A simple daily goal and habit tracker. It's a fast, mobile-first website that yo
 - **Goals.** Add, edit, reorder, archive, restore and delete goals. Settings for theme (system/light/dark) and weight unit are here too.
 - **Layout.** Normal page scrolling, a sticky header, a bottom tab bar on phones, and a two-column layout on desktop.
 - **Local only.** Data lives in your browser's localStorage on that device. There is no account and no server.
+- **Backup and restore.** On the Goals tab, **Save backup** writes a `daymark-backup-YYYY-MM-DD.json` file. Phones open the share sheet, so you can save it to Files, iCloud Drive or Google Drive, or email it; desktops download it. **Restore from file** loads a backup and replaces what's on the device, after showing what's in it. After a week of tracking with no backup in 30 days, the Today view shows a gentle reminder.
 
 ## Run it
 
@@ -44,7 +45,7 @@ The `.github/workflows/deploy.yml` workflow builds and publishes to GitHub Pages
 
 After the first visit it works with no connection. New versions load the next time you open it online.
 
-> Data stays on the device you use. It doesn't sync, and clearing the site's data in the browser erases it.
+> Data stays on the device you use. It doesn't sync, and clearing the site's data in the browser erases it, so save a backup now and then (Goals → Backup).
 
 ## How scoring works
 
@@ -64,7 +65,8 @@ src/main.tsx              entry + service worker registration
 src/App.tsx               header, tabs, theme
 src/views/                Today, Week, Progress, Goals
 src/GoalEditor.tsx        add/edit sheet (<dialog>)
-src/store.tsx             state, actions, localStorage persistence
+src/store.tsx             state, actions, localStorage persistence, data validation
+src/backup.ts             backup file export/import, reminder timing
 src/scoring.ts            scores, streaks, weight units
 src/date.ts               date helpers (weeks start Monday)
 src/ui.tsx, icons.tsx     small UI pieces, SVG charts and icons

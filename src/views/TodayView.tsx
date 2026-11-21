@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { backupDue, snoozeBackup } from '../backup';
 import { addDays, fromKey, MONTHS, shortDate, toKey, today } from '../date';
 import { Face, Icon, Mood } from '../icons';
 import { countOf, dayScore, fromDisplayWeight, maxDayScore, signed, TASK_POINTS, tasksDone, toDisplayWeight } from '../scoring';
@@ -12,10 +13,13 @@ interface Props {
   day: Date;
   setDay: (d: Date) => void;
   onEdit: (g: Goal | null) => void;
+  /** Jump to the backup settings. */
+  onOpenBackup: () => void;
 }
 
-export function TodayView({ day, setDay, onEdit }: Props) {
+export function TodayView({ day, setDay, onEdit, onOpenBackup }: Props) {
   const { state } = useStore();
+  const [nudge, setNudge] = useState(() => backupDue(state));
   const now = today();
   const key = toKey(day);
   const todayKey = toKey(now);
@@ -57,6 +61,17 @@ export function TodayView({ day, setDay, onEdit }: Props) {
           <Icon name="right" />
         </button>
       </div>
+
+      {nudge && (
+        <div className="nudge" role="note">
+          <span className="muted"><Icon name="download" size={20} /></span>
+          <span className="grow">Your data is only on this device. Save a backup?</span>
+          <button className="link" onClick={onOpenBackup}>Back up</button>
+          <button className="icon-btn" aria-label="Remind me later" onClick={() => { snoozeBackup(); setNudge(false); }}>
+            <Icon name="x" size={18} />
+          </button>
+        </div>
+      )}
 
       <div className="day-layout">
         <div>
